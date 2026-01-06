@@ -1,0 +1,136 @@
+.editor-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-header {
+  height: 60px;
+  background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.react-flow-wrapper {
+  flex-grow: 1;
+  position: relative;
+}
+
+/* Custom Node Styles */
+.custom-node {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-width: 150px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.node-header {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.node-body {
+  padding: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.input-node {
+  border-left: 4px solid var(--accent-primary);
+}
+
+.effect-node {
+  border-left: 4px solid #3b82f6;
+}
+
+.output-node {
+  border-left: 4px solid #10b981;
+}
+
+.param-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.param-panel label {
+  font-size: 0.75rem;
+}
+
+.param-panel input[type="range"] {
+  width: 100%;
+}
+
+/* React Flow Overrides */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-secondary);
+  border: 2px solid var(--bg-secondary);
+}
+
+.react-flow__edge-path {
+  stroke: var(--text-secondary);
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--accent-secondary);
+}
+
+.react-flow__controls {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.react-flow__controls-button {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  fill: var(--text-secondary);
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.react-flow__background {
+  background-color: var(--bg-primary);
+}
