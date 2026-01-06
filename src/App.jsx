@@ -4,7 +4,7 @@ import NodeEditor from './components/NodeEditor';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/noviGraph/">
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/editor" element={<NodeEditor />} />
