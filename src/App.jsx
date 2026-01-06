@@ -1,22 +1,16 @@
-import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './components/LandingPage';
+import NodeEditor from './components/NodeEditor';
 
 function App() {
   return (
-    <div className="app-container">
-      <div className="glow-orb" style={{ top: '-10%', left: '-10%' }} />
-      <div className="glow-orb" style={{ bottom: '-10%', right: '-10%', background: '#3b82f6' }} />
-      
-      <main className="hero-content">
-        <h1 className="title">Novigraph</h1>
-        <p className="subtitle">
-          Visualize your data with elegance. A modern approach to graph analytics.
-        </p>
-        <button className="cta-button">
-          Get Started
-        </button>
-      </main>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/editor" element={<NodeEditor />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
