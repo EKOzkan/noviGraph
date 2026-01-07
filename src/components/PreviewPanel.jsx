@@ -13,12 +13,16 @@ function PreviewPanel({
   processingTimeMs,
   error,
   warnings,
+  canExport,
+  exporting,
+  onExport,
 }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [jpgQuality, setJpgQuality] = useState(0.92);
   const dragRef = useRef(null);
 
   useEffect(() => {
@@ -90,6 +94,56 @@ function PreviewPanel({
           <span>{dimsLabel}</span>
           {processingTimeMs !== undefined && <span>{Math.round(processingTimeMs)} ms</span>}
         </div>
+
+        {canExport && (
+          <div className="export-panel preview-export">
+            <div className="export-row">
+              <button
+                className="node-button"
+                type="button"
+                disabled={!canExport || exporting}
+                onClick={() => onExport?.('png')}
+              >
+                PNG
+              </button>
+
+              <button
+                className="node-button"
+                type="button"
+                disabled={!canExport || exporting}
+                onClick={() => onExport?.('webp')}
+              >
+                WebP
+              </button>
+            </div>
+
+            <div className="export-row">
+              <button
+                className="node-button"
+                type="button"
+                disabled={!canExport || exporting}
+                onClick={() => onExport?.('jpg', { quality: jpgQuality })}
+              >
+                JPG
+              </button>
+
+              <div className="quality-control">
+                <label>Q</label>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.01}
+                  value={jpgQuality}
+                  onChange={(e) => setJpgQuality(parseFloat(e.target.value))}
+                />
+                <span>{Math.round(jpgQuality * 100)}</span>
+              </div>
+            </div>
+
+            {exporting && <div className="export-status">Exporting…</div>}
+          </div>
+        )}
       </div>
 
       <div
