@@ -426,26 +426,33 @@ function NodeEditor() {
     return graphRun.errors[0];
   }, [graphRun.errors]);
 
-  const handleExport = useCallback(
-    async (format, options = {}) => {
-      if (!graphRun.finalImageData) return;
+  const exportImageData = useCallback(async (imageData, format, options = {}) => {
+    if (!imageData) return;
 
-      const mimeType = format === 'jpg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
-      const ext = format === 'jpg' ? 'jpg' : format;
+    const mimeType = format === 'jpg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
+    const ext = format === 'jpg' ? 'jpg' : format;
 
-      setExporting(true);
-      try {
-        const blob = await imageDataToBlob(graphRun.finalImageData, {
-          mimeType,
-          quality: options.quality,
-        });
-        if (!blob) return;
-        downloadBlob(blob, `novigraph-${Date.now()}.${ext}`);
-      } finally {
-        setExporting(false);
-      }
-    },
-    [graphRun.finalImageData]
+    setExporting(true);
+    try {
+      const blob = await imageDataToBlob(imageData, {
+        mimeType,
+        quality: options.quality,
+      });
+      if (!blob) return;
+      downloadBlob(blob, `novigraph-${Date.now()}.${ext}`);
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
+  const handleExportFinal = useCallback(
+    (format, options = {}) => exportImageData(graphRun.finalImageData, format, options),
+    [exportImageData, graphRun.finalImageData]
+  );
+
+  const handleExportPreview = useCallback(
+    (format, options = {}) => exportImageData(previewImageData, format, options),
+    [exportImageData, previewImageData]
   );
 
   const handleSaveGraph = useCallback(() => {
@@ -563,14 +570,14 @@ function NodeEditor() {
             previewUrl: thumbUrls[node.id] ?? null,
             canExport: Boolean(graphRun.finalImageData),
             exporting,
-            onExport: handleExport,
+            onExport: handleExportFinal,
             onOpenPreview: handleOpenPreview,
             totalTimeMs: graphRun.totalTimeMs,
             inputInfo: inputImage ? { size: inputImage.size } : null,
             outputInfo: graphRun.finalImageData
               ? { width: graphRun.finalImageData.width, height: graphRun.finalImageData.height }
               : null,
-          },
+            },
         };
       }
 
@@ -591,7 +598,7 @@ function NodeEditor() {
     previewMode,
     selectedNodeId,
     exporting,
-    handleExport,
+    handleExportFinal,
   ]);
 
   const modalAfter = modalNodeId ? graphRun.resultsByNodeId?.[modalNodeId] ?? null : null;
@@ -669,6 +676,9 @@ function NodeEditor() {
           }
           error={previewError}
           warnings={graphRun.warnings}
+          canExport={Boolean(previewImageData)}
+          exporting={exporting}
+          onExport={handleExportPreview}
         />
       </div>
 
