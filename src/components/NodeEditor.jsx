@@ -15,9 +15,11 @@ import OutputNode from '../nodes/OutputNode.jsx';
 import PaletteSelector from './PaletteSelector.jsx';
 import PreviewPanel from './PreviewPanel.jsx';
 import PreviewModal from './PreviewModal.jsx';
+import NodePalette from './NodePalette.jsx';
 
 import './NodeEditor.css';
 import './PaletteSelector.css';
+import './NodePalette.css';
 
 import { effectRegistry } from '../effects/index.js';
 import { executeGraph } from '../utils/graphExecutor.js';
@@ -582,6 +584,7 @@ function NodeEditor() {
       </header>
 
       <div className="editor-main">
+        <NodePalette onAddNode={handleAddNode} />
         <div
           className="react-flow-wrapper"
           onDrop={handleDrop}
