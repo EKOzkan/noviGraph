@@ -17,9 +17,9 @@ import { palettes } from '../palettes/index.js';
 export function colorPalette(imageData, options = {}) {
   assertImageDataLike(imageData);
 
-  const paletteName = options.palette ?? 'gameboy';
-  const paletteData = palettes[paletteName] || palettes.gameboy;
-  const palette = paletteData.map((c) => toRgb(c));
+  const palette = Array.isArray(options.palette)
+    ? options.palette.map((c) => toRgb(c))
+    : (palettes[options.palette] || palettes.gameboy).map((c) => toRgb(c));
 
   const out = createImageData(imageData.width, imageData.height);
   const src = imageData.data;
