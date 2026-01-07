@@ -9,53 +9,39 @@
 import { assertImageDataLike, createImageData, clampByte } from './imageData.js';
 
 /**
- * Downsample an image by averaging blocks of pixels.
+ * Downsample an image by sampling the center pixel of each block.
+ * This matches DitherPal's implementation for performance and crispness.
  *
  * @param {ImageData} imageData - Input image data
- * @param {number} pixelSize - Size of blocks to average (must be >= 1)
+ * @param {number} pixelSize - Size of blocks to sample (must be >= 1)
  * @returns {ImageData} Downsampled image data
  */
 export function downsample(imageData, pixelSize) {
   assertImageDataLike(imageData);
 
-  if (pixelSize < 1) pixelSize = 1;
+  if (pixelSize <= 1) return imageData;
 
   const { width, height } = imageData;
   const src = imageData.data;
 
-  const newWidth = Math.ceil(width / pixelSize);
-  const newHeight = Math.ceil(height / pixelSize);
+  const newWidth = Math.max(1, Math.floor(width / pixelSize));
+  const newHeight = Math.max(1, Math.floor(height / pixelSize));
   const out = createImageData(newWidth, newHeight);
   const dst = out.data;
 
   for (let y = 0; y < newHeight; y++) {
     for (let x = 0; x < newWidth; x++) {
-      // Calculate the block boundaries in the original image
-      const startX = x * pixelSize;
-      const startY = y * pixelSize;
-      const endX = Math.min(startX + pixelSize, width);
-      const endY = Math.min(startY + pixelSize, height);
-
-      // Average the pixels in the block
-      let r = 0, g = 0, b = 0, a = 0;
-      let count = 0;
-
-      for (let py = startY; py < endY; py++) {
-        for (let px = startX; px < endX; px++) {
-          const i = (py * width + px) * 4;
-          r += src[i];
-          g += src[i + 1];
-          b += src[i + 2];
-          a += src[i + 3];
-          count++;
-        }
-      }
-
       const outIdx = (y * newWidth + x) * 4;
-      dst[outIdx] = clampByte(Math.round(r / count));
-      dst[outIdx + 1] = clampByte(Math.round(g / count));
-      dst[outIdx + 2] = clampByte(Math.round(b / count));
-      dst[outIdx + 3] = clampByte(Math.round(a / count));
+
+      // Sample the center pixel of the block for performance and crispness
+      const srcX = Math.floor(x * pixelSize + pixelSize / 2);
+      const srcY = Math.floor(y * pixelSize + pixelSize / 2);
+      const srcIdx = (Math.min(height - 1, srcY) * width + Math.min(width - 1, srcX)) * 4;
+
+      dst[outIdx] = src[srcIdx];
+      dst[outIdx + 1] = src[srcIdx + 1];
+      dst[outIdx + 2] = src[srcIdx + 2];
+      dst[outIdx + 3] = src[srcIdx + 3];
     }
   }
 
@@ -64,40 +50,39 @@ export function downsample(imageData, pixelSize) {
 
 /**
  * Upsample an image using nearest-neighbor interpolation.
+ * This matches DitherPal's implementation exactly.
  *
  * @param {ImageData} imageData - Input image data (the downsampled version)
- * @param {number} originalWidth - Target width for upsampling
- * @param {number} originalHeight - Target height for upsampling
- * @param {number} pixelSize - The pixel size used for downsampling
+ * @param {number} targetWidth - Target width for upsampling
+ * @param {number} targetHeight - Target height for upsampling
+ * @param {number} pixelSize - The pixel size used for downsampling (unused, kept for compatibility)
  * @returns {ImageData} Upsampled image data
  */
-export function upsample(imageData, originalWidth, originalHeight, pixelSize) {
+export function upsample(imageData, targetWidth, targetHeight, pixelSize) {
   assertImageDataLike(imageData);
 
-  if (pixelSize < 1) pixelSize = 1;
+  const { width, height } = imageData;
 
-  const { width: srcWidth, height: srcHeight } = imageData;
+  if (width === targetWidth && height === targetHeight) return imageData;
+
   const src = imageData.data;
-  const out = createImageData(originalWidth, originalHeight);
+  const out = createImageData(targetWidth, targetHeight);
   const dst = out.data;
 
-  for (let y = 0; y < originalHeight; y++) {
-    for (let x = 0; x < originalWidth; x++) {
-      // Map to nearest pixel in the downsampled image
-      const srcX = Math.floor(x / pixelSize);
-      const srcY = Math.floor(y / pixelSize);
+  const scaleX = width / targetWidth;
+  const scaleY = height / targetHeight;
 
-      // Clamp to source dimensions
-      const clampedSrcX = Math.min(srcX, srcWidth - 1);
-      const clampedSrcY = Math.min(srcY, srcHeight - 1);
+  for (let y = 0; y < targetHeight; y++) {
+    for (let x = 0; x < targetWidth; x++) {
+      const outIdx = (y * targetWidth + x) * 4;
+      const srcX = Math.floor(x * scaleX);
+      const srcY = Math.floor(y * scaleY);
+      const srcIdx = (Math.min(height - 1, srcY) * width + Math.min(width - 1, srcX)) * 4;
 
-      const srcIdx = (clampedSrcY * srcWidth + clampedSrcX) * 4;
-      const dstIdx = (y * originalWidth + x) * 4;
-
-      dst[dstIdx] = src[srcIdx];
-      dst[dstIdx + 1] = src[srcIdx + 1];
-      dst[dstIdx + 2] = src[srcIdx + 2];
-      dst[dstIdx + 3] = src[srcIdx + 3];
+      dst[outIdx] = src[srcIdx];
+      dst[outIdx + 1] = src[srcIdx + 1];
+      dst[outIdx + 2] = src[srcIdx + 2];
+      dst[outIdx + 3] = src[srcIdx + 3];
     }
   }
 
