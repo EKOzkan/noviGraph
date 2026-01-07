@@ -4,21 +4,22 @@
 
 import { assertImageDataLike, createImageData } from '../utils/imageData.js';
 import { nearestPaletteColor, toRgb } from '../utils/color.js';
-import { gameboy as defaultPalette } from '../palettes/index.js';
+import { palettes } from '../palettes/index.js';
 
 /**
  * Color palette mapping.
  *
  * @param {ImageData} imageData - Input image data
  * @param {Object} options - Effect parameters
- * @param {Array<string|[number,number,number]>} [options.palette] - Palette colors (default: Game Boy green palette)
+ * @param {string} [options.palette] - Palette name (default: 'gameboy')
  * @returns {ImageData} Processed image data
  */
 export function colorPalette(imageData, options = {}) {
   assertImageDataLike(imageData);
 
-  const paletteInput = options.palette ?? defaultPalette;
-  const palette = paletteInput.map((c) => toRgb(c));
+  const paletteName = options.palette ?? 'gameboy';
+  const paletteData = palettes[paletteName] || palettes.gameboy;
+  const palette = paletteData.map((c) => toRgb(c));
 
   const out = createImageData(imageData.width, imageData.height);
   const src = imageData.data;

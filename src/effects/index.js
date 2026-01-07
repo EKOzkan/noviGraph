@@ -280,7 +280,10 @@ export const effectRegistry = {
     category: 'color',
     description: 'Map colors to the nearest colors in a limited palette.',
     parameters: {
-      palette: { default: 'gameboy (built-in)', type: 'Array<color>' },
+      palette: { 
+        options: ['gameboy', 'bw', 'grayscale4', 'cga', 'commodore64', 'gameBoyOriginal', 'gameBoyColor', 'nes', 'amiga', 'atari2600', 'zxSpectrum', 'masterSystem', 'pcEngine'], 
+        default: 'gameboy' 
+      },
     },
     fn: colorPalette,
   },
