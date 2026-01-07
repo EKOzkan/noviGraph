@@ -39,9 +39,16 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.editor-main {
+  flex-grow: 1;
+  display: flex;
+  overflow: hidden;
+}
+
 .react-flow-wrapper {
   flex-grow: 1;
   position: relative;
+  height: 100%;
 }
 
 /* Custom Node Styles */
@@ -87,15 +94,79 @@
 .param-panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.param-panel label {
+.param-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.param-control label {
   font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-transform: capitalize;
 }
 
-.param-panel input[type="range"] {
+.param-control input[type="range"] {
   width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.param-control input[type="range"]:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.param-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+}
+
+.param-control input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: none;
+}
+
+.param-value {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-align: right;
+  margin-top: 2px;
+}
+
+.param-control input[type="text"],
+.param-control select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.param-control input[type="text"]:focus,
+.param-control select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.param-control select {
+  cursor: pointer;
 }
 
 /* React Flow Overrides */
