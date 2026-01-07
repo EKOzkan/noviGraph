@@ -4,8 +4,21 @@
 
 export { errorDiffusion } from './dithering/errorDiffusion.js';
 export { floydSteinberg } from './dithering/floydSteinberg.js';
+export { falseFloydSteinberg } from './dithering/falseFloydSteinberg.js';
+export { floydSteinbergSerpentine } from './dithering/floydSteinbergSerpentine.js';
+export { atkinson } from './dithering/atkinson.js';
+export { jarvisJudiceNinke } from './dithering/jarvisJudiceNinke.js';
+export { stucki } from './dithering/stucki.js';
+export { burkes } from './dithering/burkes.js';
 export { orderedDither } from './dithering/orderedDither.js';
+export { bayerOrdered4x4 } from './dithering/bayerOrdered4x4.js';
+export { bayerOrdered16x16 } from './dithering/bayerOrdered16x16.js';
+export { randomOrdered } from './dithering/randomOrdered.js';
 export { patternDither } from './dithering/patternDither.js';
+export { tiling } from './dithering/tiling.js';
+export { clustered } from './dithering/clustered.js';
+export { riemersma } from './dithering/riemersma.js';
+export { colorReducing } from './dithering/colorReducing.js';
 export { threshold } from './dithering/threshold.js';
 
 export { colorPalette } from './color/colorPalette.js';
@@ -32,8 +45,21 @@ export { featherMask } from './backgroundRemoval/featherMask.js';
 export * as palettes from './palettes/index.js';
 
 import { floydSteinberg } from './dithering/floydSteinberg.js';
+import { falseFloydSteinberg } from './dithering/falseFloydSteinberg.js';
+import { floydSteinbergSerpentine } from './dithering/floydSteinbergSerpentine.js';
+import { atkinson } from './dithering/atkinson.js';
+import { jarvisJudiceNinke } from './dithering/jarvisJudiceNinke.js';
+import { stucki } from './dithering/stucki.js';
+import { burkes } from './dithering/burkes.js';
 import { orderedDither } from './dithering/orderedDither.js';
+import { bayerOrdered4x4 } from './dithering/bayerOrdered4x4.js';
+import { bayerOrdered16x16 } from './dithering/bayerOrdered16x16.js';
+import { randomOrdered } from './dithering/randomOrdered.js';
 import { patternDither } from './dithering/patternDither.js';
+import { tiling } from './dithering/tiling.js';
+import { clustered } from './dithering/clustered.js';
+import { riemersma } from './dithering/riemersma.js';
+import { colorReducing } from './dithering/colorReducing.js';
 import { threshold as thresholdFn } from './dithering/threshold.js';
 
 import { colorPalette } from './color/colorPalette.js';
@@ -66,18 +92,119 @@ export const effectRegistry = {
     },
     fn: floydSteinberg,
   },
+  false_floyd_steinberg: {
+    name: 'False Floyd–Steinberg',
+    category: 'dithering',
+    description: 'Faster approximation of Floyd–Steinberg error diffusion.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      serpentine: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: falseFloydSteinberg,
+  },
+  floyd_steinberg_serpentine: {
+    name: 'Floyd–Steinberg (Serpentine)',
+    category: 'dithering',
+    description: 'Standard Floyd–Steinberg with fixed serpentine scanning.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: floydSteinbergSerpentine,
+  },
+  atkinson: {
+    name: 'Atkinson Dithering',
+    category: 'dithering',
+    description: 'Apple-developed error diffusion with high contrast and reduced bleed.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      serpentine: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: atkinson,
+  },
+  jarvis_judice_ninke: {
+    name: 'Jarvis-Judice-Ninke',
+    category: 'dithering',
+    description: 'High-quality error diffusion using a large 12-neighbor kernel.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      serpentine: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: jarvisJudiceNinke,
+  },
+  stucki: {
+    name: 'Stucki Dithering',
+    category: 'dithering',
+    description: 'High-quality error diffusion similar to Jarvis-Judice-Ninke but faster.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      serpentine: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: stucki,
+  },
+  burkes: {
+    name: 'Burkes Dithering',
+    category: 'dithering',
+    description: 'Faster error diffusion using a 7-neighbor kernel.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      serpentine: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: burkes,
+  },
   ordered_dither: {
     name: 'Ordered Dither (Bayer)',
     category: 'dithering',
-    description: 'Ordered dithering using Bayer matrices (2x2, 4x4, 8x8).',
+    description: 'Ordered dithering using Bayer matrices (2x2, 4x4, 8x8, 16x16).',
     parameters: {
-      matrixSize: { options: [2, 4, 8], default: 8 },
+      matrixSize: { options: [2, 4, 8, 16], default: 8 },
       levels: { min: 2, max: 32, default: 2 },
       strength: { min: 0, max: 1, default: 1 },
       grayscale: { options: [true, false], default: true },
       Size_: { min: 1, max: 32, default: 1 },
     },
     fn: orderedDither,
+  },
+  bayer_4x4: {
+    name: 'Bayer 4x4',
+    category: 'dithering',
+    description: 'Fixed 4x4 Bayer ordered dither.',
+    parameters: {
+      levels: { min: 2, max: 32, default: 2 },
+      strength: { min: 0, max: 1, default: 1 },
+      grayscale: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: bayerOrdered4x4,
+  },
+  bayer_16x16: {
+    name: 'Bayer 16x16',
+    category: 'dithering',
+    description: 'Fixed 16x16 Bayer ordered dither.',
+    parameters: {
+      levels: { min: 2, max: 32, default: 2 },
+      strength: { min: 0, max: 1, default: 1 },
+      grayscale: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: bayerOrdered16x16,
+  },
+  random_ordered: {
+    name: 'Random Ordered',
+    category: 'dithering',
+    description: 'Ordered dither using random noise thresholds.',
+    parameters: {
+      levels: { min: 2, max: 32, default: 2 },
+      strength: { min: 0, max: 1, default: 1 },
+      grayscale: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: randomOrdered,
   },
   pattern_dither: {
     name: 'Pattern Dither',
@@ -90,6 +217,50 @@ export const effectRegistry = {
       Size_: { min: 1, max: 32, default: 1 },
     },
     fn: patternDither,
+  },
+  tiling: {
+    name: 'Tiling',
+    category: 'dithering',
+    description: 'Checkerboard pattern ordered dither.',
+    parameters: {
+      levels: { min: 2, max: 32, default: 2 },
+      strength: { min: 0, max: 1, default: 1 },
+      grayscale: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: tiling,
+  },
+  clustered: {
+    name: 'Clustered Dot',
+    category: 'dithering',
+    description: 'Clustered dot (halftone-style) ordered dither.',
+    parameters: {
+      levels: { min: 2, max: 32, default: 2 },
+      strength: { min: 0, max: 1, default: 1 },
+      grayscale: { options: [true, false], default: true },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: clustered,
+  },
+  riemersma: {
+    name: 'Riemersma',
+    category: 'dithering',
+    description: 'Dithering along a space-filling curve with error history.',
+    parameters: {
+      history: { min: 1, max: 16, default: 16 },
+      decay: { min: 0, max: 1, default: 0.9 },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: riemersma,
+  },
+  color_reducing: {
+    name: 'Color Reducing',
+    category: 'dithering',
+    description: 'Reduce color palette without any dithering patterns.',
+    parameters: {
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: colorReducing,
   },
   threshold: {
     name: 'Threshold',

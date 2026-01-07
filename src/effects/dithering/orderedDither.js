@@ -1,5 +1,5 @@
 /**
- * Ordered dithering (Bayer matrices).
+ * Ordered dithering (Bayer matrices and random).
  */
 
 import { assertImageDataLike, clampByte, createImageData } from '../utils/imageData.js';
@@ -29,10 +29,26 @@ const BAYER_8 = [
   [42, 26, 38, 22, 41, 25, 37, 21],
 ];
 
-function getBayer(size) {
-  if (size === 2) return BAYER_2;
-  if (size === 4) return BAYER_4;
-  return BAYER_8;
+/**
+ * Get Bayer matrix value for 16x16 matrix.
+ */
+function getBayer16(x, y) {
+  const size = 16;
+  let val = 0;
+  let tx = x % size;
+  let ty = y % size;
+  for (let i = size >> 1; i > 0; i >>= 1) {
+    val = (val << 2) | ((tx & i) ? ((ty & i) ? 1 : 2) : ((ty & i) ? 3 : 0));
+  }
+  return val;
+}
+
+function getBayer(size, x, y) {
+  if (size === 2) return BAYER_2[y % 2][x % 2];
+  if (size === 4) return BAYER_4[y % 4][x % 4];
+  if (size === 8) return BAYER_8[y % 8][x % 8];
+  if (size === 16) return getBayer16(x, y);
+  return BAYER_8[y % 8][x % 8];
 }
 
 /**
@@ -40,7 +56,7 @@ function getBayer(size) {
  *
  * @param {ImageData} imageData - Input image data
  * @param {Object} options - Effect parameters
- * @param {number} [options.matrixSize=8] - Bayer matrix size (options: 2, 4, 8)
+ * @param {number|string} [options.matrixSize=8] - Bayer matrix size (2, 4, 8, 16) or 'random'
  * @param {number} [options.levels=2] - Quantization levels per channel (range: 2-32)
  * @param {number} [options.strength=1] - Dither threshold modulation strength (range: 0-1)
  * @param {boolean} [options.grayscale=true] - Dither using luminance only
@@ -60,8 +76,8 @@ export function orderedDither(imageData, options = {}) {
       grayscale = true,
     } = opts;
 
-    const size = matrixSize === 2 || matrixSize === 4 || matrixSize === 8 ? matrixSize : 8;
-    const matrix = getBayer(size);
+    const isRandom = matrixSize === 'random';
+    const size = isRandom ? 1 : (Number(matrixSize) || 8);
     const n2 = size * size;
 
     const lv = Math.max(2, Math.min(32, levels | 0));
@@ -74,9 +90,15 @@ export function orderedDither(imageData, options = {}) {
     for (let y = 0; y < img.height; y++) {
       for (let x = 0; x < img.width; x++) {
         const i = (y * img.width + x) * 4;
-        const m = matrix[y % size][x % size];
-        // Shift in [-0.5, +0.5]
-        const thresholdShift = ((m + 0.5) / n2 - 0.5) * s;
+        
+        let thresholdShift;
+        if (isRandom) {
+          thresholdShift = (Math.random() - 0.5) * s;
+        } else {
+          const m = getBayer(size, x, y);
+          // Shift in [-0.5, +0.5]
+          thresholdShift = ((m + 0.5) / n2 - 0.5) * s;
+        }
 
         const r = src[i];
         const g = src[i + 1];
