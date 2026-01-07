@@ -35,6 +35,21 @@ function PreviewPanel({
     setPan({ x: 0, y: 0 });
   }, [imageData?.width, imageData?.height]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e) => {
+      if (!imageData) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setZoom((z) => clamp(z + delta, 0.1, 8));
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [imageData]);
+
   const dimsLabel = useMemo(() => {
     if (!imageData) return '—';
     return `${imageData.width}×${imageData.height}`;
