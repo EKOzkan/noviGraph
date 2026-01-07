@@ -68,10 +68,20 @@ const EffectNode = ({ data, id, selected }) => {
           <select
             value={String(v)}
             onChange={(e) => {
-              const selectedValue =
-                paramDef.options[0] === true || paramDef.options[0] === false
-                  ? e.target.value === 'true'
-                  : e.target.value;
+              const firstOption = paramDef.options[0];
+              let selectedValue;
+              
+              if (firstOption === true || firstOption === false) {
+                // Boolean options
+                selectedValue = e.target.value === 'true';
+              } else if (typeof firstOption === 'number') {
+                // Numeric options
+                selectedValue = Number(e.target.value);
+              } else {
+                // String options
+                selectedValue = e.target.value;
+              }
+              
               handleParameterChange(paramName, selectedValue);
             }}
           >
