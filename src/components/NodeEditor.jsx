@@ -372,6 +372,7 @@ function NodeEditor() {
       if (node.type === 'inputNode') {
         return {
           ...node,
+          dragHandle: '.node-drag-handle',
           data: {
             ...node.data,
             onImageUpload: handleImageUpload,
@@ -387,6 +388,7 @@ function NodeEditor() {
       if (node.type === 'effectNode') {
         return {
           ...node,
+          dragHandle: '.node-drag-handle',
           data: {
             ...node.data,
             onParameterChange: handleParameterChange,
@@ -402,6 +404,7 @@ function NodeEditor() {
       if (node.type === 'outputNode') {
         return {
           ...node,
+          dragHandle: '.node-drag-handle',
           data: {
             ...node.data,
             nodeId: node.id,

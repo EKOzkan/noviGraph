@@ -35,7 +35,7 @@ const InputNode = ({ data, selected }) => {
 
   return (
     <div className={`custom-node input-node ${isDragOver ? 'drag-over' : ''} ${selected ? 'selected' : ''}`}>
-      <div className="node-header">{data.label || 'Input'}</div>
+      <div className="node-header node-drag-handle">{data.label || 'Input'}</div>
 
       <div
         className="node-body"
