@@ -16,6 +16,7 @@ import PaletteSelector from './PaletteSelector.jsx';
 import PreviewPanel from './PreviewPanel.jsx';
 import PreviewModal from './PreviewModal.jsx';
 import NodePalette from './NodePalette.jsx';
+import NodeAddMenu from './NodeAddMenu.jsx';
 
 import './NodeEditor.css';
 import './PaletteSelector.css';
@@ -92,6 +93,7 @@ function buildGraphSignature(nodes, edges) {
 function NodeEditor() {
   const navigate = useNavigate();
   const cacheRef = useRef(new Map());
+  const reactFlowInstanceRef = useRef(null);
 
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
@@ -116,6 +118,7 @@ function NodeEditor() {
   const [modalNodeId, setModalNodeId] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
+  const [nodeAddMenu, setNodeAddMenu] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -144,28 +147,29 @@ function NodeEditor() {
     setModalNodeId(nodeId);
   }, []);
 
-  const handleAddNode = useCallback(
-    (newNode) => {
-      const maxX = Math.max(...nodes.map((n) => n.position.x), 200);
-      const newPosition = {
+  const handleAddNode = useCallback((newNode, options = {}) => {
+    setNodes((prevNodes) => {
+      const maxX = prevNodes.length ? Math.max(...prevNodes.map((n) => n.position.x), 200) : 200;
+      const fallbackPosition = {
         x: maxX + 250,
-        y: 150 + ((nodes.length * 60) % 320),
+        y: 150 + ((prevNodes.length * 60) % 320),
       };
 
-      setNodes((prevNodes) => [
+      const position = options.position ?? fallbackPosition;
+
+      return [
         ...prevNodes,
         {
           ...newNode,
-          position: newPosition,
+          position,
           data: {
             ...newNode.data,
             showPreview: Boolean(newNode.data?.showPreview),
           },
         },
-      ]);
-    },
-    [nodes]
-  );
+      ];
+    });
+  }, []);
 
   const handleDrop = useCallback(
     (event) => {
@@ -198,21 +202,61 @@ function NodeEditor() {
     event.preventDefault();
   }, []);
 
-  const handleNodeContextMenu = useCallback(
-    (event, node) => {
-      event.preventDefault();
-      setContextMenu({
-        x: event.clientX,
-        y: event.clientY,
-        nodeId: node.id,
-      });
-    },
-    []
-  );
-
-  const handlePaneClick = useCallback(() => {
-    setContextMenu(null);
+  const handleNodeContextMenu = useCallback((event, node) => {
+    event.preventDefault();
+    setNodeAddMenu(null);
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      nodeId: node.id,
+    });
   }, []);
+
+  const handlePaneClick = useCallback((event) => {
+    setContextMenu(null);
+    setSelectedNodeId(null);
+    setNodeAddMenu({ x: event.clientX, y: event.clientY });
+  }, []);
+
+  const handleCloseNodeAddMenu = useCallback(() => {
+    setNodeAddMenu(null);
+  }, []);
+
+  const handleSelectEffectFromCanvasMenu = useCallback(
+    (effectId) => {
+      const effectData = effectRegistry[effectId];
+      if (!nodeAddMenu || !effectData) return;
+
+      const instance = reactFlowInstanceRef.current;
+      const screenPos = { x: nodeAddMenu.x, y: nodeAddMenu.y };
+      const position =
+        typeof instance?.screenToFlowPosition === 'function'
+          ? instance.screenToFlowPosition(screenPos)
+          : typeof instance?.project === 'function'
+            ? instance.project(screenPos)
+            : { x: 250, y: 150 };
+
+      handleAddNode(
+        {
+          id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          type: 'effectNode',
+          data: {
+            label: effectData.name,
+            effectId,
+            effectData,
+            parameters: Object.fromEntries(
+              Object.entries(effectData.parameters || {}).map(([key, param]) => [key, param.default])
+            ),
+            showPreview: false,
+          },
+        },
+        { position }
+      );
+
+      setNodeAddMenu(null);
+    },
+    [handleAddNode, nodeAddMenu]
+  );
 
   const handleRemoveNode = useCallback(() => {
     if (!contextMenu?.nodeId) return;
@@ -593,10 +637,17 @@ function NodeEditor() {
           <ReactFlow
             nodes={nodesForRender}
             edges={edges}
+            onInit={(instance) => {
+              reactFlowInstanceRef.current = instance;
+            }}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
-            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onNodeClick={(_, node) => {
+              setSelectedNodeId(node.id);
+              setContextMenu(null);
+              setNodeAddMenu(null);
+            }}
             onNodeContextMenu={handleNodeContextMenu}
             onPaneClick={handlePaneClick}
             nodeTypes={nodeTypes}
@@ -628,6 +679,17 @@ function NodeEditor() {
         beforeImageData={modalBefore}
         afterImageData={modalAfter}
       />
+
+      {nodeAddMenu && (
+        <div className="node-add-menu-overlay" onMouseDown={handleCloseNodeAddMenu}>
+          <NodeAddMenu
+            x={nodeAddMenu.x}
+            y={nodeAddMenu.y}
+            onClose={handleCloseNodeAddMenu}
+            onSelectEffect={handleSelectEffectFromCanvasMenu}
+          />
+        </div>
+      )}
 
       {contextMenu && (
         <div
