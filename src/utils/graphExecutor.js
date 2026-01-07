@@ -27,18 +27,26 @@ function sanitizeParameters(effectId, rawParameters, parameterDefs) {
       }
 
       if (typeof value === 'string') {
-        const normalized = value
-          .toLowerCase()
-          .split(/\s|\(|\)/)
-          .filter(Boolean)[0];
-
-        if (normalized && builtInPalettes[normalized]) {
-          out[key] = builtInPalettes[normalized];
+        // Try direct match first
+        if (builtInPalettes[value]) {
+          out[key] = builtInPalettes[value];
           continue;
+        }
+        
+        // Try case-insensitive match
+        const normalized = value.toLowerCase();
+        for (const [paletteName, paletteData] of Object.entries(builtInPalettes)) {
+          if (paletteName.toLowerCase() === normalized) {
+            out[key] = paletteData;
+            continue;
+          }
         }
       }
 
-      out[key] = builtInPalettes.gameboy;
+      // Use default from parameter definition
+      const paletteDef = parameterDefs?.palette;
+      const defaultPaletteName = paletteDef?.default || 'gameboy';
+      out[key] = builtInPalettes[defaultPaletteName] || builtInPalettes.gameboy;
       continue;
     }
 
