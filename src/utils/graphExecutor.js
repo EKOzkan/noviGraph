@@ -35,11 +35,16 @@ function sanitizeParameters(effectId, rawParameters, parameterDefs) {
         
         // Try case-insensitive match
         const normalized = value.toLowerCase();
+        let foundPalette = null;
         for (const [paletteName, paletteData] of Object.entries(builtInPalettes)) {
           if (paletteName.toLowerCase() === normalized) {
-            out[key] = paletteData;
-            continue;
+            foundPalette = paletteData;
+            break;
           }
+        }
+        if (foundPalette) {
+          out[key] = foundPalette;
+          continue;
         }
       }
 
