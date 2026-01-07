@@ -4,6 +4,7 @@
 
 import { assertImageDataLike, clampByte, createImageData } from '../utils/imageData.js';
 import { luminance } from '../utils/color.js';
+import { applyPixelSizeEffect } from '../utils/pixelSize.js';
 
 const BAYER_2 = [
   [0, 2],
@@ -43,61 +44,68 @@ function getBayer(size) {
  * @param {number} [options.levels=2] - Quantization levels per channel (range: 2-32)
  * @param {number} [options.strength=1] - Dither threshold modulation strength (range: 0-1)
  * @param {boolean} [options.grayscale=true] - Dither using luminance only
+ * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function orderedDither(imageData, options = {}) {
-  assertImageDataLike(imageData);
+  const pixelSize = options.pixelSize ?? 1;
 
-  const {
-    matrixSize = 8,
-    levels = 2,
-    strength = 1,
-    grayscale = true,
-  } = options;
+  const doDither = (img, opts) => {
+    assertImageDataLike(img);
 
-  const size = matrixSize === 2 || matrixSize === 4 || matrixSize === 8 ? matrixSize : 8;
-  const matrix = getBayer(size);
-  const n2 = size * size;
+    const {
+      matrixSize = 8,
+      levels = 2,
+      strength = 1,
+      grayscale = true,
+    } = opts;
 
-  const lv = Math.max(2, Math.min(32, levels | 0));
-  const s = Math.max(0, Math.min(1, strength));
+    const size = matrixSize === 2 || matrixSize === 4 || matrixSize === 8 ? matrixSize : 8;
+    const matrix = getBayer(size);
+    const n2 = size * size;
 
-  const out = createImageData(imageData.width, imageData.height);
-  const src = imageData.data;
-  const dst = out.data;
+    const lv = Math.max(2, Math.min(32, levels | 0));
+    const s = Math.max(0, Math.min(1, strength));
 
-  for (let y = 0; y < imageData.height; y++) {
-    for (let x = 0; x < imageData.width; x++) {
-      const i = (y * imageData.width + x) * 4;
-      const m = matrix[y % size][x % size];
-      // Shift in [-0.5, +0.5]
-      const thresholdShift = ((m + 0.5) / n2 - 0.5) * s;
+    const out = createImageData(img.width, img.height);
+    const src = img.data;
+    const dst = out.data;
 
-      const r = src[i];
-      const g = src[i + 1];
-      const b = src[i + 2];
+    for (let y = 0; y < img.height; y++) {
+      for (let x = 0; x < img.width; x++) {
+        const i = (y * img.width + x) * 4;
+        const m = matrix[y % size][x % size];
+        // Shift in [-0.5, +0.5]
+        const thresholdShift = ((m + 0.5) / n2 - 0.5) * s;
 
-      if (grayscale) {
-        let l = luminance(r, g, b) / 255;
-        l = Math.max(0, Math.min(1, l + thresholdShift));
-        const q = Math.round(l * (lv - 1)) / (lv - 1);
-        const v = clampByte(Math.round(q * 255));
-        dst[i] = v;
-        dst[i + 1] = v;
-        dst[i + 2] = v;
-      } else {
-        const channels = [r, g, b];
-        for (let c = 0; c < 3; c++) {
-          let v = channels[c] / 255;
-          v = Math.max(0, Math.min(1, v + thresholdShift));
-          const q = Math.round(v * (lv - 1)) / (lv - 1);
-          dst[i + c] = clampByte(Math.round(q * 255));
+        const r = src[i];
+        const g = src[i + 1];
+        const b = src[i + 2];
+
+        if (grayscale) {
+          let l = luminance(r, g, b) / 255;
+          l = Math.max(0, Math.min(1, l + thresholdShift));
+          const q = Math.round(l * (lv - 1)) / (lv - 1);
+          const v = clampByte(Math.round(q * 255));
+          dst[i] = v;
+          dst[i + 1] = v;
+          dst[i + 2] = v;
+        } else {
+          const channels = [r, g, b];
+          for (let c = 0; c < 3; c++) {
+            let v = channels[c] / 255;
+            v = Math.max(0, Math.min(1, v + thresholdShift));
+            const q = Math.round(v * (lv - 1)) / (lv - 1);
+            dst[i + c] = clampByte(Math.round(q * 255));
+          }
         }
+
+        dst[i + 3] = src[i + 3];
       }
-
-      dst[i + 3] = src[i + 3];
     }
-  }
 
-  return out;
+    return out;
+  };
+
+  return applyPixelSizeEffect(imageData, pixelSize, doDither, options);
 }
