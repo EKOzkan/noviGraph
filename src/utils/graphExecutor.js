@@ -21,32 +21,16 @@ function sanitizeParameters(effectId, rawParameters, parameterDefs) {
     if (value === undefined) value = def.default;
 
     if (effectId === 'color_palette' && key === 'palette') {
-      if (Array.isArray(value)) {
+      // Keep palette as a string name - the colorPalette function will resolve it
+      if (typeof value === 'string') {
         out[key] = value;
         continue;
-      }
-
-      if (typeof value === 'string') {
-        // Try direct match first
-        if (builtInPalettes[value]) {
-          out[key] = builtInPalettes[value];
-          continue;
-        }
-        
-        // Try case-insensitive match
-        const normalized = value.toLowerCase();
-        for (const [paletteName, paletteData] of Object.entries(builtInPalettes)) {
-          if (paletteName.toLowerCase() === normalized) {
-            out[key] = paletteData;
-            continue;
-          }
-        }
       }
 
       // Use default from parameter definition
       const paletteDef = parameterDefs?.palette;
       const defaultPaletteName = paletteDef?.default || 'gameboy';
-      out[key] = builtInPalettes[defaultPaletteName] || builtInPalettes.gameboy;
+      out[key] = defaultPaletteName;
       continue;
     }
 
