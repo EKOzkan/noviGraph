@@ -26,11 +26,11 @@ const ORDER_2x2 = [
  * @param {string|[number,number,number]} [options.foreground='#000000'] - Foreground color
  * @param {string|[number,number,number]} [options.background='#ffffff'] - Background color
  * @param {boolean} [options.invert=false] - Invert luminance mapping
- * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
+ * @param {number} [options.Size_=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function patternDither(imageData, options = {}) {
-  const pixelSize = options.pixelSize ?? 1;
+  const Size_ = options.Size_ ?? 1;
 
   const doDither = (img, opts) => {
     assertImageDataLike(img);
@@ -90,5 +90,5 @@ export function patternDither(imageData, options = {}) {
     return out;
   };
 
-  return applyPixelSizeEffect(imageData, pixelSize, doDither, options);
+  return applyPixelSizeEffect(imageData, Size_, doDither, options);
 }
