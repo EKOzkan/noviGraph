@@ -113,6 +113,7 @@ function NodeEditor() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [modalNodeId, setModalNodeId] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -194,6 +195,31 @@ function NodeEditor() {
   const handleDragOver = useCallback((event) => {
     event.preventDefault();
   }, []);
+
+  const handleNodeContextMenu = useCallback(
+    (event, node) => {
+      event.preventDefault();
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        nodeId: node.id,
+      });
+    },
+    []
+  );
+
+  const handlePaneClick = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const handleRemoveNode = useCallback(() => {
+    if (!contextMenu?.nodeId) return;
+    const nodeId = contextMenu.nodeId;
+
+    setNodes((prev) => prev.filter((n) => n.id !== nodeId));
+    setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
+    setContextMenu(null);
+  }, [contextMenu]);
 
   const handleImageUpload = useCallback(async (file) => {
     const imageData = await fileToImageData(file);
@@ -569,6 +595,8 @@ function NodeEditor() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onNodeContextMenu={handleNodeContextMenu}
+            onPaneClick={handlePaneClick}
             nodeTypes={nodeTypes}
             fitView
           >
@@ -598,6 +626,22 @@ function NodeEditor() {
         beforeImageData={modalBefore}
         afterImageData={modalAfter}
       />
+
+      {contextMenu && (
+        <div
+          className="context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="context-menu-header">Node Options</div>
+          <button
+            className="context-menu-item danger"
+            onClick={handleRemoveNode}
+          >
+            Remove Node
+          </button>
+        </div>
+      )}
     </div>
   );
 }
