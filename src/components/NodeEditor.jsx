@@ -12,12 +12,12 @@ import { useNavigate } from 'react-router-dom';
 import InputNode from '../nodes/InputNode.jsx';
 import EffectNode from '../nodes/EffectNode.jsx';
 import OutputNode from '../nodes/OutputNode.jsx';
-import NodePalette from './NodePalette.jsx';
+import PaletteSelector from './PaletteSelector.jsx';
 import PreviewPanel from './PreviewPanel.jsx';
 import PreviewModal from './PreviewModal.jsx';
 
 import './NodeEditor.css';
-import './NodePalette.css';
+import './PaletteSelector.css';
 
 import { effectRegistry } from '../effects/index.js';
 import { executeGraph } from '../utils/graphExecutor.js';
@@ -565,6 +565,7 @@ function NodeEditor() {
         >
           Novigraph
         </div>
+        <PaletteSelector onAddNode={handleAddNode} />
         <div className="editor-controls">
           <button className="control-button" onClick={handleLoadGraphClick}>Load Graph</button>
           <button className="control-button" onClick={handleSaveGraph}>Save Graph</button>
@@ -581,8 +582,6 @@ function NodeEditor() {
       </header>
 
       <div className="editor-main">
-        <NodePalette onAddNode={handleAddNode} />
-
         <div
           className="react-flow-wrapper"
           onDrop={handleDrop}
