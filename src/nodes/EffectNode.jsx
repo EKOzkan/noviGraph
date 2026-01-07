@@ -100,7 +100,7 @@ const EffectNode = ({ data, id, selected }) => {
     >
       <Handle type="target" position={Position.Left} />
 
-      <div className="node-header">
+      <div className="node-header node-drag-handle">
         <div className="node-title">{data.label || 'Effect'}</div>
         <div className="node-header-right">
           <label className="preview-toggle" onClick={(e) => e.stopPropagation()}>

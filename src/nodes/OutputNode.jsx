@@ -14,7 +14,7 @@ const OutputNode = ({ data, selected }) => {
   return (
     <div className={`custom-node output-node ${selected ? 'selected' : ''}`}>
       <Handle type="target" position={Position.Left} />
-      <div className="node-header">{data.label || 'Output'}</div>
+      <div className="node-header node-drag-handle">{data.label || 'Output'}</div>
 
       <div className="node-body">
         {data.previewUrl ? (

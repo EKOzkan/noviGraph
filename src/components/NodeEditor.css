@@ -73,6 +73,14 @@
   letter-spacing: 0.05em;
 }
 
+.node-drag-handle {
+  cursor: grab;
+}
+
+.node-drag-handle:active {
+  cursor: grabbing;
+}
+
 .node-body {
   padding: 12px;
   font-size: 0.9rem;
