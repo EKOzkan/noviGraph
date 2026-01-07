@@ -12,8 +12,12 @@ import { useNavigate } from 'react-router-dom';
 import InputNode from '../nodes/InputNode';
 import EffectNode from '../nodes/EffectNode';
 import OutputNode from '../nodes/OutputNode';
+import NodePalette from './NodePalette';
 
 import './NodeEditor.css';
+import './NodePalette.css';
+
+import { effectRegistry } from '../effects/index.js';
 
 const nodeTypes = {
   inputNode: InputNode,
@@ -32,7 +36,19 @@ const initialNodes = [
     id: 'node-2',
     type: 'effectNode',
     position: { x: 400, y: 150 },
-    data: { label: 'Gaussian Blur' },
+    data: { 
+      label: 'Gaussian Blur',
+      effectId: 'tonal',
+      effectData: effectRegistry.tonal,
+      parameters: {
+        brightness: 0,
+        contrast: 0,
+        gamma: 1,
+        blackPoint: 0,
+        whitePoint: 255,
+        saturation: 0,
+      }
+    },
   },
   {
     id: 'node-3',
@@ -65,6 +81,62 @@ function NodeEditor() {
     []
   );
 
+  const handleAddNode = useCallback((newNode) => {
+    // Position the new node intelligently
+    const maxX = Math.max(...nodes.map(n => n.position.x), 200);
+    const newPosition = {
+      x: maxX + 250,
+      y: 150 + (nodes.length * 50) % 300
+    };
+
+    setNodes(prevNodes => [
+      ...prevNodes,
+      {
+        ...newNode,
+        position: newPosition,
+        data: {
+          ...newNode.data,
+          onParameterChange: (nodeId, newParameters) => {
+            setNodes(prev =>
+              prev.map(node =>
+                node.id === nodeId
+                  ? { ...node, data: { ...node.data, parameters: newParameters } }
+                  : node
+              )
+            );
+          }
+        }
+      }
+    ]);
+  }, [nodes]);
+
+  const handleDrop = useCallback((event) => {
+    event.preventDefault();
+    try {
+      const effectId = event.dataTransfer.getData('effectId');
+      if (effectId && effectRegistry[effectId]) {
+        handleAddNode({
+          id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          type: 'effectNode',
+          data: {
+            label: effectRegistry[effectId].name,
+            effectId: effectId,
+            effectData: effectRegistry[effectId],
+            parameters: Object.fromEntries(
+              Object.entries(effectRegistry[effectId].parameters || {}).map(([key, param]) => [key, param.default])
+            )
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  }, [handleAddNode]);
+
+  const handleDragOver = useCallback((event) => {
+    event.preventDefault();
+  }, []);
+
   return (
     <div className="editor-container">
       <header className="editor-header">
@@ -73,20 +145,28 @@ function NodeEditor() {
           Back to Home
         </button>
       </header>
-      
-      <div className="react-flow-wrapper">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          fitView
+
+      <div className="editor-main">
+        <NodePalette onAddNode={handleAddNode} />
+
+        <div
+          className="react-flow-wrapper"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
         >
-          <Background color="#333" gap={20} />
-          <Controls />
-        </ReactFlow>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            fitView
+          >
+            <Background color="#333" gap={20} />
+            <Controls />
+          </ReactFlow>
+        </div>
       </div>
     </div>
   );
