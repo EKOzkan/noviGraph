@@ -44,11 +44,11 @@ function getBayer(size) {
  * @param {number} [options.levels=2] - Quantization levels per channel (range: 2-32)
  * @param {number} [options.strength=1] - Dither threshold modulation strength (range: 0-1)
  * @param {boolean} [options.grayscale=true] - Dither using luminance only
- * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
+ * @param {number} [options.Size_=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function orderedDither(imageData, options = {}) {
-  const pixelSize = options.pixelSize ?? 1;
+  const Size_ = options.Size_ ?? 1;
 
   const doDither = (img, opts) => {
     assertImageDataLike(img);
@@ -107,5 +107,5 @@ export function orderedDither(imageData, options = {}) {
     return out;
   };
 
-  return applyPixelSizeEffect(imageData, pixelSize, doDither, options);
+  return applyPixelSizeEffect(imageData, Size_, doDither, options);
 }

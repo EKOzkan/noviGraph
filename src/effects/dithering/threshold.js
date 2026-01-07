@@ -14,11 +14,11 @@ import { applyPixelSizeEffect } from '../utils/pixelSize.js';
  * @param {number} [options.threshold=128] - Threshold value (range: 0-255)
  * @param {boolean} [options.grayscale=true] - If true, thresholds luminance; otherwise thresholds each RGB channel
  * @param {boolean} [options.invert=false] - Invert threshold output
- * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
+ * @param {number} [options.Size_=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function threshold(imageData, options = {}) {
-  const pixelSize = options.pixelSize ?? 1;
+  const Size_ = options.Size_ ?? 1;
 
   const doThreshold = (img, opts) => {
     assertImageDataLike(img);
@@ -61,5 +61,5 @@ export function threshold(imageData, options = {}) {
     return out;
   };
 
-  return applyPixelSizeEffect(imageData, pixelSize, doThreshold, options);
+  return applyPixelSizeEffect(imageData, Size_, doThreshold, options);
 }
