@@ -482,6 +482,14 @@
   flex-direction: column;
 }
 
+/* Node add menu */
+.node-add-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: transparent;
+}
+
 /* Context menu */
 .context-menu {
   position: fixed;
