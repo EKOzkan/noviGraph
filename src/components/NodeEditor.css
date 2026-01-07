@@ -75,16 +75,54 @@
 
 .node-drag-handle {
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  position: relative;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.node-drag-handle:after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  box-shadow: 0 -5px 0 rgba(255, 255, 255, 0.3), 
+              0 5px 0 rgba(255, 255, 255, 0.3);
 }
 
 .node-drag-handle:active {
   cursor: grabbing;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .node-body {
+  pointer-events: auto;
+  cursor: default;
   padding: 12px;
   font-size: 0.9rem;
   color: var(--text-secondary);
+}
+
+/* Custom Node Styles */
+.custom-node {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  min-width: 150px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  cursor: default !important;
 }
 
 .input-node {
