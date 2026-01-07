@@ -4,6 +4,7 @@
 
 import { assertImageDataLike, createImageData } from '../utils/imageData.js';
 import { luminance, toRgb } from '../utils/color.js';
+import { applyPixelSizeEffect } from '../utils/pixelSize.js';
 
 // Order pixels are turned on as luminance increases.
 const ORDER_2x2 = [
@@ -25,62 +26,69 @@ const ORDER_2x2 = [
  * @param {string|[number,number,number]} [options.foreground='#000000'] - Foreground color
  * @param {string|[number,number,number]} [options.background='#ffffff'] - Background color
  * @param {boolean} [options.invert=false] - Invert luminance mapping
+ * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function patternDither(imageData, options = {}) {
-  assertImageDataLike(imageData);
+  const pixelSize = options.pixelSize ?? 1;
 
-  const {
-    scale = 1,
-    levels = 5,
-    foreground = '#000000',
-    background = '#ffffff',
-    invert = false,
-  } = options;
+  const doDither = (img, opts) => {
+    assertImageDataLike(img);
 
-  const s = Math.max(1, Math.min(16, scale | 0));
-  const lv = Math.max(2, Math.min(5, levels | 0));
+    const {
+      scale = 1,
+      levels = 5,
+      foreground = '#000000',
+      background = '#ffffff',
+      invert = false,
+    } = opts;
 
-  const fg = toRgb(foreground);
-  const bg = toRgb(background);
+    const s = Math.max(1, Math.min(16, scale | 0));
+    const lv = Math.max(2, Math.min(5, levels | 0));
 
-  const out = createImageData(imageData.width, imageData.height);
-  const src = imageData.data;
-  const dst = out.data;
+    const fg = toRgb(foreground);
+    const bg = toRgb(background);
 
-  for (let y = 0; y < imageData.height; y++) {
-    for (let x = 0; x < imageData.width; x++) {
-      const i = (y * imageData.width + x) * 4;
-      const r = src[i];
-      const g = src[i + 1];
-      const b = src[i + 2];
+    const out = createImageData(img.width, img.height);
+    const src = img.data;
+    const dst = out.data;
 
-      let l = luminance(r, g, b) / 255;
-      if (invert) l = 1 - l;
+    for (let y = 0; y < img.height; y++) {
+      for (let x = 0; x < img.width; x++) {
+        const i = (y * img.width + x) * 4;
+        const r = src[i];
+        const g = src[i + 1];
+        const b = src[i + 2];
 
-      // Map to 0..(lv-1) then to number of filled pixels in 2x2.
-      const level = Math.round(l * (lv - 1));
-      const fillCount = Math.round((level / (lv - 1)) * 4);
+        let l = luminance(r, g, b) / 255;
+        if (invert) l = 1 - l;
 
-      const px = Math.floor(x / s) % 2;
-      const py = Math.floor(y / s) % 2;
+        // Map to 0..(lv-1) then to number of filled pixels in 2x2.
+        const level = Math.round(l * (lv - 1));
+        const fillCount = Math.round((level / (lv - 1)) * 4);
 
-      let on = false;
-      for (let k = 0; k < fillCount; k++) {
-        const [ox, oy] = ORDER_2x2[k];
-        if (ox === px && oy === py) {
-          on = true;
-          break;
+        const px = Math.floor(x / s) % 2;
+        const py = Math.floor(y / s) % 2;
+
+        let on = false;
+        for (let k = 0; k < fillCount; k++) {
+          const [ox, oy] = ORDER_2x2[k];
+          if (ox === px && oy === py) {
+            on = true;
+            break;
+          }
         }
+
+        const c = on ? fg : bg;
+        dst[i] = c[0];
+        dst[i + 1] = c[1];
+        dst[i + 2] = c[2];
+        dst[i + 3] = src[i + 3];
       }
-
-      const c = on ? fg : bg;
-      dst[i] = c[0];
-      dst[i + 1] = c[1];
-      dst[i + 2] = c[2];
-      dst[i + 3] = src[i + 3];
     }
-  }
 
-  return out;
+    return out;
+  };
+
+  return applyPixelSizeEffect(imageData, pixelSize, doDither, options);
 }

@@ -4,6 +4,7 @@
 
 import { errorDiffusion } from './errorDiffusion.js';
 import { bw as defaultBwPalette } from '../palettes/index.js';
+import { applyPixelSizeEffect } from '../utils/pixelSize.js';
 
 const FLOYD_STEINBERG = [
   { dx: 1, dy: 0, weight: 7 / 16 },
@@ -20,13 +21,20 @@ const FLOYD_STEINBERG = [
  * @param {Array<[number,number,number]>} [options.palette] - Output palette (default: black/white)
  * @param {boolean} [options.serpentine=true] - Alternate scan direction per row
  * @param {number} [options.intensity=1] - Error diffusion strength (range: 0-1)
+ * @param {number} [options.pixelSize=1] - Pixel size for downsample-upsample effect (range: 1-32)
  * @returns {ImageData} Processed image data
  */
 export function floydSteinberg(imageData, options = {}) {
-  return errorDiffusion(imageData, {
-    palette: options.palette ?? defaultBwPalette,
-    serpentine: options.serpentine ?? true,
-    intensity: options.intensity ?? 1,
-    matrix: FLOYD_STEINBERG,
-  });
+  const pixelSize = options.pixelSize ?? 1;
+
+  const doDither = (img, opts) => {
+    return errorDiffusion(img, {
+      palette: opts.palette ?? defaultBwPalette,
+      serpentine: opts.serpentine ?? true,
+      intensity: opts.intensity ?? 1,
+      matrix: FLOYD_STEINBERG,
+    });
+  };
+
+  return applyPixelSizeEffect(imageData, pixelSize, doDither, options);
 }
