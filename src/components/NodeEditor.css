@@ -17,6 +17,12 @@
   z-index: 10;
 }
 
+.editor-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: 800;
@@ -33,6 +39,20 @@
   border-radius: 8px;
   font-size: 0.9rem;
   transition: background 0.2s;
+}
+
+.control-button {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+.control-button:hover {
+  background: rgba(167, 139, 250, 0.25);
 }
 
 .back-button:hover {
