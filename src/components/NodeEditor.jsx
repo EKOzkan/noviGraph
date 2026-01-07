@@ -22,6 +22,13 @@ import './NodePalette.css';
 import { effectRegistry } from '../effects/index.js';
 import { executeGraph } from '../utils/graphExecutor.js';
 import { downloadBlob, fileToImageData, imageDataToBlob, imageDataToDataUrl } from '../utils/imageUtils.js';
+import {
+  serializeGraph,
+  deserializeGraph,
+  downloadGraph,
+  loadGraphFromFile,
+  generateGraphFilename,
+} from '../utils/graphSerialization.js';
 
 const nodeTypes = {
   inputNode: InputNode,
@@ -106,6 +113,8 @@ function NodeEditor() {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [modalNodeId, setModalNodeId] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   const graphSignature = useMemo(() => {
     const sig = buildGraphSignature(nodes, edges);
@@ -367,6 +376,77 @@ function NodeEditor() {
     [graphRun.finalImageData]
   );
 
+  const handleSaveGraph = useCallback(() => {
+    try {
+      const graphData = serializeGraph(nodes, edges, inputImage);
+      const filename = generateGraphFilename();
+      downloadGraph(graphData, filename);
+    } catch (error) {
+      console.error('Failed to save graph:', error);
+      // Could add user-facing error notification here
+    }
+  }, [nodes, edges, inputImage]);
+
+  const handleLoadGraphClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleLoadGraph = useCallback(
+    async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const graphData = await loadGraphFromFile(file);
+        const { nodes: loadedNodes, edges: loadedEdges, inputImage: loadedInputImage } = deserializeGraph(graphData, effectRegistry);
+
+        // Reset the cache since we're loading a new graph
+        cacheRef.current = new Map();
+
+        // If there's an input image in the saved graph, we need to reconstruct it
+        if (loadedInputImage) {
+          // For now, we'll handle the case where the image data might not be saved
+          // In a future enhancement, we could embed the actual image data
+          console.warn('Input image metadata loaded, but image data itself is not persisted');
+        }
+
+        // Apply the loaded graph state
+        setNodes(loadedNodes);
+        setEdges(loadedEdges);
+        setInputImage(null); // Reset input image for now
+        setSelectedNodeId(null); // Clear selection
+
+        // Clear the file input so the same file can be loaded again
+        event.target.value = '';
+      } catch (error) {
+        console.error('Failed to load graph:', error);
+        alert(`Failed to load graph: ${error.message}`); // Simple user feedback
+        event.target.value = '';
+      }
+    },
+    []
+  );
+
+  const handleClearGraph = useCallback(() => {
+    if (window.confirm('Are you sure you want to clear the current graph? This will remove all nodes and edges.')) {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+      setInputImage(null);
+      setGraphRun({
+        finalImageData: null,
+        resultsByNodeId: {},
+        nodeTimingsMs: {},
+        totalTimeMs: 0,
+        errors: [],
+        warnings: [],
+        inputNodeId: null,
+        outputNodeId: null,
+      });
+      setThumbUrls({});
+      cacheRef.current = new Map();
+    }
+  }, []);
+
   const nodesForRender = useMemo(() => {
     return nodes.map((node) => {
       if (node.type === 'inputNode') {
@@ -459,7 +539,19 @@ function NodeEditor() {
         >
           Novigraph
         </div>
-        <button className="back-button" onClick={() => navigate('/')}>Back to Home</button>
+        <div className="editor-controls">
+          <button className="control-button" onClick={handleLoadGraphClick}>Load Graph</button>
+          <button className="control-button" onClick={handleSaveGraph}>Save Graph</button>
+          <button className="control-button" onClick={handleClearGraph}>Clear Graph</button>
+          <button className="back-button" onClick={() => navigate('/')}>Back to Home</button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleLoadGraph}
+            style={{ display: 'none' }}
+          />
+        </div>
       </header>
 
       <div className="editor-main">
