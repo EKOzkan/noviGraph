@@ -157,6 +157,18 @@
   border-left: 4px solid #10b981;
 }
 
+.rgb-split-node {
+  border-left: 4px solid #f59e0b;
+}
+
+.channel-add-node {
+  border-left: 4px solid #ec4899;
+}
+
+.position-node {
+  border-left: 4px solid #8b5cf6;
+}
+
 .param-panel {
   display: flex;
   flex-direction: column;

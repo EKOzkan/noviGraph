@@ -12,6 +12,9 @@ import { useNavigate } from 'react-router-dom';
 import InputNode from '../nodes/InputNode.jsx';
 import EffectNode from '../nodes/EffectNode.jsx';
 import OutputNode from '../nodes/OutputNode.jsx';
+import RgbSplitNode from '../nodes/RgbSplitNode.jsx';
+import ChannelAddNode from '../nodes/ChannelAddNode.jsx';
+import PositionNode from '../nodes/PositionNode.jsx';
 import PaletteSelector from './PaletteSelector.jsx';
 import PreviewPanel from './PreviewPanel.jsx';
 import PreviewModal from './PreviewModal.jsx';
@@ -37,6 +40,9 @@ const nodeTypes = {
   inputNode: InputNode,
   effectNode: EffectNode,
   outputNode: OutputNode,
+  rgbSplitNode: RgbSplitNode,
+  channelAddNode: ChannelAddNode,
+  positionNode: PositionNode,
 };
 
 const initialNodes = [
@@ -94,6 +100,7 @@ function NodeEditor() {
   const navigate = useNavigate();
   const cacheRef = useRef(new Map());
   const reactFlowInstanceRef = useRef(null);
+  const reactFlowWrapperRef = useRef(null);
 
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
@@ -150,29 +157,58 @@ function NodeEditor() {
     setModalNodeId(nodeId);
   }, []);
 
-  const handleAddNode = useCallback((newNode, options = {}) => {
-    setNodes((prevNodes) => {
-      const maxX = prevNodes.length ? Math.max(...prevNodes.map((n) => n.position.x), 200) : 200;
-      const fallbackPosition = {
-        x: maxX + 250,
-        y: 150 + ((prevNodes.length * 60) % 320),
-      };
+  const handleAddNode = useCallback(
+    (newNode, options = {}) => {
+      const instance = reactFlowInstanceRef.current;
+      const wrapperRect = reactFlowWrapperRef.current?.getBoundingClientRect?.();
+      const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) : null;
 
-      const position = options.position ?? fallbackPosition;
+      const preferredPosition =
+        options.position ??
+        (selectedNode
+          ? { x: selectedNode.position.x + 280, y: selectedNode.position.y }
+          : wrapperRect
+            ? typeof instance?.screenToFlowPosition === 'function'
+              ? instance.screenToFlowPosition({
+                  x: wrapperRect.left + wrapperRect.width / 2,
+                  y: wrapperRect.top + wrapperRect.height / 2,
+                })
+              : typeof instance?.project === 'function'
+                ? instance.project({
+                    x: wrapperRect.left + wrapperRect.width / 2,
+                    y: wrapperRect.top + wrapperRect.height / 2,
+                  })
+                : null
+            : null);
 
-      return [
-        ...prevNodes,
-        {
-          ...newNode,
-          position,
-          data: {
-            ...newNode.data,
-            showPreview: Boolean(newNode.data?.showPreview),
+      setNodes((prevNodes) => {
+        const maxX = prevNodes.length ? Math.max(...prevNodes.map((n) => n.position.x), 200) : 200;
+        const fallbackPosition = {
+          x: maxX + 250,
+          y: 150 + ((prevNodes.length * 60) % 320),
+        };
+
+        const basePosition = preferredPosition ?? fallbackPosition;
+        const offset = prevNodes.length % 6;
+        const position = { x: basePosition.x + offset * 18, y: basePosition.y + offset * 18 };
+
+        return [
+          ...prevNodes,
+          {
+            ...newNode,
+            position,
+            data: {
+              ...newNode.data,
+              showPreview: Boolean(newNode.data?.showPreview),
+            },
           },
-        },
-      ];
-    });
-  }, []);
+        ];
+      });
+
+      setSelectedNodeId(newNode.id);
+    },
+    [nodes, selectedNodeId]
+  );
 
   const handleDrop = useCallback(
     (event) => {
@@ -604,6 +640,37 @@ function NodeEditor() {
         };
       }
 
+      if (node.type === 'rgbSplitNode' || node.type === 'channelAddNode') {
+        return {
+          ...node,
+          dragHandle: '.node-drag-handle',
+          data: {
+            ...node.data,
+            onTogglePreview: handleTogglePreview,
+            onOpenPreview: handleOpenPreview,
+            previewUrl: thumbUrls[node.id] ?? null,
+            processingTimeMs: graphRun.nodeTimingsMs?.[node.id],
+            isPreviewed: previewMode === 'node' && selectedNodeId === node.id,
+          },
+        };
+      }
+
+      if (node.type === 'positionNode') {
+        return {
+          ...node,
+          dragHandle: '.node-drag-handle',
+          data: {
+            ...node.data,
+            onParameterChange: handleParameterChange,
+            onTogglePreview: handleTogglePreview,
+            onOpenPreview: handleOpenPreview,
+            previewUrl: thumbUrls[node.id] ?? null,
+            processingTimeMs: graphRun.nodeTimingsMs?.[node.id],
+            isPreviewed: previewMode === 'node' && selectedNodeId === node.id,
+          },
+        };
+      }
+
       return node;
     });
   }, [
@@ -660,6 +727,7 @@ function NodeEditor() {
       <div className="editor-main">
         <NodePalette onAddNode={handleAddNode} />
         <div
+          ref={reactFlowWrapperRef}
           className="react-flow-wrapper"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
