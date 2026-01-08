@@ -709,9 +709,6 @@ export const effectRegistry = {
     },
     fn: negative,
   },
-
-    fn: featherMask,
-  },
 };
 
 /**
