@@ -1,0 +1,62 @@
+  // Color & Tone Adjustments
+  grayscale: {
+    name: 'Grayscale',
+    category: 'color',
+    description: 'Convert to grayscale with various methods.',
+    parameters: {
+      method: { options: ['luminance', 'average', 'lightness'], default: 'luminance' },
+      intensity: { min: 0, max: 1, default: 1 },
+    },
+    fn: grayscale,
+  },
+  desaturate: {
+    name: 'Desaturate',
+    category: 'color',
+    description: 'Alternative desaturation methods.',
+    parameters: {
+      method: { options: ['luminance', 'average', 'lightness', 'decompose'], default: 'luminance' },
+      intensity: { min: 0, max: 1, default: 1 },
+    },
+    fn: desaturate,
+  },
+  sepia: {
+    name: 'Sepia Tone',
+    category: 'color',
+    description: 'Apply sepia toning to image.',
+    parameters: {
+      intensity: { min: 0, max: 1, default: 1 },
+      tone: { min: 0, max: 1, default: 0.5 },
+    },
+    fn: sepia,
+  },
+  color_balance: {
+    name: 'Color Balance',
+    category: 'color',
+    description: 'Adjust color balance in shadows, midtones, and highlights.',
+    parameters: {
+      shadowsCyan: { min: -100, max: 100, default: 0 },
+      shadowsMagenta: { min: -100, max: 100, default: 0 },
+      shadowsYellow: { min: -100, max: 100, default: 0 },
+      midtonesCyan: { min: -100, max: 100, default: 0 },
+      midtonesMagenta: { min: -100, max: 100, default: 0 },
+      midtonesYellow: { min: -100, max: 100, default: 0 },
+      highlightsCyan: { min: -100, max: 100, default: 0 },
+      highlightsMagenta: { min: -100, max: 100, default: 0 },
+      highlightsYellow: { min: -100, max: 100, default: 0 },
+      preserveLuminosity: { options: [true, false], default: true },
+    },
+    fn: colorBalance,
+  },
+  hue_saturation: {
+    name: 'Hue/Saturation',
+    category: 'color',
+    description: 'Adjust hue, saturation, and lightness.',
+    parameters: {
+      hue: { min: -180, max: 180, default: 0 },
+      saturation: { min: -1, max: 1, default: 0 },
+      lightness: { min: -1, max: 1, default: 0 },
+      colorize: { options: [true, false], default: false },
+      hueTarget: { min: 0, max: 360, default: 0 },
+    },
+    fn: hueSaturation,
+  },
