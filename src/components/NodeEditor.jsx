@@ -121,6 +121,9 @@ function NodeEditor() {
   const [nodeAddMenu, setNodeAddMenu] = useState(null);
 
   const fileInputRef = useRef(null);
+  const previewPanelRef = useRef(null);
+  const [previewWidth, setPreviewWidth] = useState(420);
+  const isResizingRef = useRef(false);
 
   const graphSignature = useMemo(() => {
     const sig = buildGraphSignature(nodes, edges);
@@ -266,6 +269,26 @@ function NodeEditor() {
     setEdges((prev) => prev.filter((e) => e.source !== nodeId && e.target !== nodeId));
     setContextMenu(null);
   }, [contextMenu]);
+
+  const handleStartResize = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isResizingRef.current = true;
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', handleStopResize);
+  }, []);
+
+  const handleResize = useCallback((e) => {
+    if (!isResizingRef.current) return;
+    const newWidth = Math.max(300, Math.min(800, window.innerWidth - e.clientX));
+    setPreviewWidth(newWidth);
+  }, []);
+
+  const handleStopResize = useCallback(() => {
+    isResizingRef.current = false;
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', handleStopResize);
+  }, [handleResize]);
 
   const handleImageUpload = useCallback(async (file) => {
     const imageData = await fileToImageData(file);
@@ -665,21 +688,24 @@ function NodeEditor() {
           </ReactFlow>
         </div>
 
-        <PreviewPanel
-          imageData={previewImageData}
-          isProcessing={isProcessing}
-          mode={previewMode}
-          onChangeMode={setPreviewMode}
-          title={previewTitle}
-          processingTimeMs={
-            previewMode === 'node' && selectedNodeId ? graphRun.nodeTimingsMs?.[selectedNodeId] : graphRun.totalTimeMs
-          }
-          error={previewError}
-          warnings={graphRun.warnings}
-          canExport={Boolean(previewImageData)}
-          exporting={exporting}
-          onExport={handleExportPreview}
-        />
+        <div className="preview-panel-wrapper" style={{ width: `${previewWidth}px` }} ref={previewPanelRef}>
+          <div className="resize-handle" onMouseDown={handleStartResize} />
+          <PreviewPanel
+            imageData={previewImageData}
+            isProcessing={isProcessing}
+            mode={previewMode}
+            onChangeMode={setPreviewMode}
+            title={previewTitle}
+            processingTimeMs={
+              previewMode === 'node' && selectedNodeId ? graphRun.nodeTimingsMs?.[selectedNodeId] : graphRun.totalTimeMs
+            }
+            error={previewError}
+            warnings={graphRun.warnings}
+            canExport={Boolean(previewImageData)}
+            exporting={exporting}
+            onExport={handleExportPreview}
+          />
+        </div>
       </div>
 
       <PreviewModal
