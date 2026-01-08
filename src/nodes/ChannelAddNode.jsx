@@ -1,5 +1,5 @@
 import { Handle, Position } from 'reactflow';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ChannelAddNode = ({ data, id, selected }) => {
   const [showPreview, setShowPreview] = useState(Boolean(data.showPreview));
