@@ -633,6 +633,8 @@ export const effectRegistry = {
       radius: { min: 1, max: 10, default: 1 },
       iterations: { min: 1, max: 4, default: 1 },
     },
+    fn: erode,
+  },
   emboss: {
     name: 'Emboss',
     category: 'special',
@@ -664,9 +666,6 @@ export const effectRegistry = {
       opacity: { min: 0, max: 1, default: 1 },
     },
     fn: blend,
-  },
-
-    fn: erode,
   },
 
   gaussian_blur: {
@@ -708,9 +707,6 @@ export const effectRegistry = {
       intensity: { min: 0, max: 1, default: 1 },
     },
     fn: negative,
-  },
-
-    fn: featherMask,
   },
 };
 
