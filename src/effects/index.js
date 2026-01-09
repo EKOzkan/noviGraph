@@ -535,6 +535,8 @@ export const effectRegistry = {
       radius: { min: 0, max: 64, default: 8 },
       iterations: { min: 1, max: 4, default: 1 },
     },
+    fn: featherMask,
+  },
   grayscale: {
     name: 'Grayscale',
     category: 'color',
@@ -633,6 +635,8 @@ export const effectRegistry = {
       radius: { min: 1, max: 10, default: 1 },
       iterations: { min: 1, max: 4, default: 1 },
     },
+    fn: erode,
+  },
   emboss: {
     name: 'Emboss',
     category: 'special',
@@ -665,10 +669,6 @@ export const effectRegistry = {
     },
     fn: blend,
   },
-
-    fn: erode,
-  },
-
   gaussian_blur: {
     name: 'Gaussian Blur',
     category: 'blur',
@@ -699,18 +699,6 @@ export const effectRegistry = {
       interpolation: { options: ['nearest', 'bilinear'], default: 'bilinear' },
     },
     fn: rotate,
-  },
-  negative: {
-    name: 'Negative/Invert',
-    category: 'effects',
-    description: 'Invert image colors.',
-    parameters: {
-      intensity: { min: 0, max: 1, default: 1 },
-    },
-    fn: negative,
-  },
-
-    fn: featherMask,
   },
 };
 
