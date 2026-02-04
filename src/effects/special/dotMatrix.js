@@ -21,7 +21,7 @@ function smoothstep(edge0, edge1, x) {
   return t * t * (3 - 2 * t);
 }
 
-function computeDotCoverage(x, y, cosAngle, sinAngle, dotSize, inkAmount) {
+function computeDotCoverage(x, y, cosAngle, sinAngle, dotSize, inkAmount, quality) {
   if (inkAmount <= 0) {
     return 0;
   }
@@ -32,7 +32,6 @@ function computeDotCoverage(x, y, cosAngle, sinAngle, dotSize, inkAmount) {
   const cellY = Math.floor(yRot / dotSize);
   const centerX = (cellX + 0.5) * dotSize;
   const centerY = (cellY + 0.5) * dotSize;
-  const dist = Math.hypot(xRot - centerX, yRot - centerY);
 
   const maxRadius = dotSize * 0.5;
   const radius = maxRadius * Math.sqrt(inkAmount);
@@ -40,12 +39,39 @@ function computeDotCoverage(x, y, cosAngle, sinAngle, dotSize, inkAmount) {
     return 0;
   }
 
-  const softEdge = Math.min(dotSize * 0.15, radius);
-  if (softEdge <= 0) {
-    return dist <= radius ? 1 : 0;
+  if (quality === 'low') {
+    // Fast single-sample version
+    const dist = Math.hypot(xRot - centerX, yRot - centerY);
+    const softEdge = Math.min(dotSize * 0.15, radius);
+    if (softEdge <= 0) {
+      return dist <= radius ? 1 : 0;
+    }
+    return 1 - smoothstep(radius - softEdge, radius + softEdge, dist);
   }
 
-  return 1 - smoothstep(radius - softEdge, radius + softEdge, dist);
+  // High quality: supersampling with 2x2 or 4x4 grid
+  const samples = quality === 'ultra' ? 4 : 2;
+  const sampleStep = 1.0 / samples;
+  let coverage = 0;
+
+  for (let sy = 0; sy < samples; sy++) {
+    for (let sx = 0; sx < samples; sx++) {
+      const offsetX = (sx + 0.5) * sampleStep - 0.5;
+      const offsetY = (sy + 0.5) * sampleStep - 0.5;
+      
+      const sampleXRot = (x + offsetX) * cosAngle - (y + offsetY) * sinAngle;
+      const sampleYRot = (x + offsetX) * sinAngle + (y + offsetY) * cosAngle;
+      
+      const dist = Math.hypot(sampleXRot - centerX, sampleYRot - centerY);
+      
+      // Smoother antialiasing curve for HD quality
+      const softEdge = Math.max(0.5, dotSize * 0.1);
+      const sample = 1 - smoothstep(radius - softEdge, radius + softEdge, dist);
+      coverage += sample;
+    }
+  }
+
+  return coverage / (samples * samples);
 }
 
 function rgbToCmyk(r, g, b) {
@@ -75,6 +101,7 @@ function rgbToCmyk(r, g, b) {
  * @param {number} [options.intensity=1] - Ink intensity (0-2)
  * @param {number} [options.angleOffset=0] - Rotation offset for CMYK screens (-45 to 45)
  * @param {boolean} [options.grayscale=false] - Use monochrome K channel only
+ * @param {string} [options.quality='high'] - Rendering quality: 'low', 'high', or 'ultra'
  * @returns {ImageData} Halftoned image data
  */
 export function dotMatrix(imageData, options = {}) {
@@ -84,6 +111,7 @@ export function dotMatrix(imageData, options = {}) {
   const intensity = clamp(options.intensity ?? 1, 0, 2);
   const angleOffset = clamp(options.angleOffset ?? 0, -45, 45);
   const grayscale = options.grayscale ?? false;
+  const quality = options.quality ?? 'high';
 
   const width = imageData.width;
   const height = imageData.height;
@@ -133,7 +161,7 @@ export function dotMatrix(imageData, options = {}) {
       if (grayscale) {
         const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         const inkAmount = clamp((1 - lum) * intensity, 0, 1);
-        kInk = computeDotCoverage(dx, dy, cosAngles.k, sinAngles.k, dotSize, inkAmount);
+        kInk = computeDotCoverage(dx, dy, cosAngles.k, sinAngles.k, dotSize, inkAmount, quality);
       } else {
         const { c, m, y: yChannel, k } = rgbToCmyk(r, g, b);
         const cAmt = clamp(c * intensity, 0, 1);
@@ -141,10 +169,10 @@ export function dotMatrix(imageData, options = {}) {
         const yAmt = clamp(yChannel * intensity, 0, 1);
         const kAmt = clamp(k * intensity, 0, 1);
 
-        cInk = computeDotCoverage(dx, dy, cosAngles.c, sinAngles.c, dotSize, cAmt);
-        mInk = computeDotCoverage(dx, dy, cosAngles.m, sinAngles.m, dotSize, mAmt);
-        yInk = computeDotCoverage(dx, dy, cosAngles.y, sinAngles.y, dotSize, yAmt);
-        kInk = computeDotCoverage(dx, dy, cosAngles.k, sinAngles.k, dotSize, kAmt);
+        cInk = computeDotCoverage(dx, dy, cosAngles.c, sinAngles.c, dotSize, cAmt, quality);
+        mInk = computeDotCoverage(dx, dy, cosAngles.m, sinAngles.m, dotSize, mAmt, quality);
+        yInk = computeDotCoverage(dx, dy, cosAngles.y, sinAngles.y, dotSize, yAmt, quality);
+        kInk = computeDotCoverage(dx, dy, cosAngles.k, sinAngles.k, dotSize, kAmt, quality);
       }
 
       const rOut = 255 * (1 - cInk) * (1 - kInk);

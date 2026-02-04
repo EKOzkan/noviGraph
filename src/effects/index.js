@@ -34,6 +34,8 @@ export { levels } from './color/levels.js';
 
 export { pixelize } from './distortion/pixelize.js';
 export { grain } from './distortion/grain.js';
+export { blueNoise } from './distortion/blueNoise.js';
+export { animatedNoise } from './distortion/animatedNoise.js';
 export {
   glitch,
   chromaticAberration,
@@ -125,6 +127,8 @@ import { levels } from './color/levels.js';
 
 import { pixelize } from './distortion/pixelize.js';
 import { grain } from './distortion/grain.js';
+import { blueNoise } from './distortion/blueNoise.js';
+import { animatedNoise } from './distortion/animatedNoise.js';
 import { chromaticAberration, pixelSort, digitalCorruption, dataMosh } from './distortion/glitch.js';
 import { rotate } from './distortion/rotate.js';
 import { flip } from './distortion/flip.js';
@@ -433,6 +437,32 @@ export const effectRegistry = {
     },
     fn: grain,
   },
+  blue_noise: {
+    name: 'Blue Noise',
+    category: 'distortion',
+    description: 'High-quality perceptually uniform noise with minimal clumping.',
+    parameters: {
+      amount: { min: 0, max: 1, default: 0.2 },
+      monochrome: { options: [true, false], default: true },
+      seed: { default: null },
+      scale: { min: 1, max: 8, default: 1 },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: blueNoise,
+  },
+  animated_noise: {
+    name: 'Animated Noise',
+    category: 'distortion',
+    description: 'Time-varying noise for live animation effects (TV static, temporal grain).',
+    parameters: {
+      amount: { min: 0, max: 1, default: 0.2 },
+      monochrome: { options: [true, false], default: true },
+      speed: { min: 0.1, max: 10, default: 1 },
+      baseSeed: { default: null },
+      Size_: { min: 1, max: 32, default: 1 },
+    },
+    fn: animatedNoise,
+  },
   chromatic_aberration: {
     name: 'Chromatic Aberration',
     category: 'distortion',
@@ -653,12 +683,13 @@ export const effectRegistry = {
   dot_matrix: {
     name: 'Dot Matrix (CMYK)',
     category: 'special',
-    description: 'CMYK halftone dot matrix for print-style effects.',
+    description: 'CMYK halftone dot matrix with HD quality antialiasing for print-style effects.',
     parameters: {
       dotSize: { min: 2, max: 20, default: 6 },
       intensity: { min: 0, max: 2, default: 1 },
       angleOffset: { min: -45, max: 45, default: 0 },
       grayscale: { options: [true, false], default: false },
+      quality: { options: ['low', 'high', 'ultra'], default: 'high' },
     },
     fn: dotMatrix,
   },
