@@ -9,6 +9,7 @@ const NodePalette = ({ onAddNode }) => {
     distortion: true,
     effects: true,
     backgroundRemoval: true,
+    special: true,
   });
 
   const toggleCategory = (category) => {
