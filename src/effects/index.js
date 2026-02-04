@@ -74,6 +74,7 @@ export { blend, blendHsl } from './blending/blend.js';
 export { opacity } from './blending/opacity.js';
 
 export { emboss } from './special/emboss.js';
+export { dotMatrix } from './special/dotMatrix.js';
 export { quantize } from './special/quantize.js';
 export { chromaticAb } from './special/chromaticAb.js';
 export { glowEnhance } from './special/glowEnhance.js';
@@ -158,6 +159,7 @@ import { blend, blendHsl } from './blending/blend.js';
 import { opacity } from './blending/opacity.js';
 
 import { emboss } from './special/emboss.js';
+import { dotMatrix } from './special/dotMatrix.js';
 import { quantize } from './special/quantize.js';
 import { chromaticAb } from './special/chromaticAb.js';
 import { glowEnhance } from './special/glowEnhance.js';
@@ -647,6 +649,18 @@ export const effectRegistry = {
       depth: { min: 0.5, max: 5, default: 1 },
     },
     fn: emboss,
+  },
+  dot_matrix: {
+    name: 'Dot Matrix (CMYK)',
+    category: 'special',
+    description: 'CMYK halftone dot matrix for print-style effects.',
+    parameters: {
+      dotSize: { min: 2, max: 20, default: 6 },
+      intensity: { min: 0, max: 2, default: 1 },
+      angleOffset: { min: -45, max: 45, default: 0 },
+      grayscale: { options: [true, false], default: false },
+    },
+    fn: dotMatrix,
   },
   vignette: {
     name: 'Vignette',
